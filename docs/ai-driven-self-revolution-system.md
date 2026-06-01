@@ -102,6 +102,18 @@ Important observations:
 - Deep Agents Code has experimental support for `~/.claude/skills` and project `.claude/skills`.
 - It does not directly consume all of `~/.claude/agents`, `~/.claude/rules`, or `~/.claude/settings.json` without adapters.
 
+Source provenance checked during the discussion:
+
+| Area | Representative source files | Why it matters for integration |
+|---|---|---|
+| Core graph / agent factory | `libs/deepagents/deepagents/graph.py`, `libs/deepagents/deepagents/__init__.py` | Confirms `create_deep_agent` / LangGraph-style stateful orchestration is the core reusable pattern. |
+| Middleware surface | `libs/deepagents/deepagents/middleware/subagents.py`, `async_subagents.py`, `skills.py`, `memory.py`, `summarization.py`, `rubric.py`, `permissions.py`, `filesystem.py` | Maps directly to `~/.claude` roles: reviewers/breakers, skills, memory, context compaction, convergence rubrics, permission gates, and file-backed artifacts. |
+| Backend surface | `libs/deepagents/deepagents/backends/filesystem.py`, `composite.py`, `local_shell.py`, `state.py`, `store.py` | Useful for Evidence Ledger / scratch filesystem / local execution patterns without replacing `code-lm`. |
+| Harness profiles | `libs/deepagents/deepagents/profiles/harness/*` | Shows model-specific orchestration guidance can be packaged as reusable prompt/profile layers. |
+| Coding-agent surface | `libs/code/deepagents_code/agent.py`, `server_graph.py`, `project_utils.py`, `skills/load.py`, `subagents.py`, `tools.py`, `config.py` | Confirms `deepagents-code` already has skill/subagent/config concepts, but its project conventions differ from the current `~/.claude` governance system. |
+| CLI / deployment surface | `libs/cli/deepagents_cli/deploy/*`, `libs/cli/deepagents_cli/config.py` | Explains why the CLI is better treated as deploy/runtime tooling rather than a direct replacement for the existing coding workflow. |
+| ACP adapter surface | `libs/acp/deepagents_acp/*`, `libs/acp/examples/demo_agent.py` | Useful future direction for exposing agents through standard protocol boundaries. |
+
 Useful Deep Agents concepts for this system:
 
 | Deep Agents Concept | How to reuse it |
@@ -127,6 +139,25 @@ From the local git history and changelogs:
 - Coding-agent functionality moved into `deepagents-code`.
 - `deepagents-cli` became more focused on `init`, `dev`, and `deploy`.
 - SDK releases added state schema, rubric middleware, code interpreter middleware, filesystem permissions, harness profiles, and other infrastructure.
+
+Evidence snapshot:
+
+| Evidence | Observation |
+|---|---|
+| First local history commit | `2025-07-27 5c3ad025 Initial commit` |
+| Upstream analysis base before local docs commits | `2026-05-30 1906af98 ci(infra): rename release workflow to Package Release (#3671)` |
+| Current package versions observed | `deepagents 0.6.7`, `deepagents-code 0.1.7`, `deepagents-cli 0.1.2`, `deepagents-acp 0.0.6` |
+| SDK release cadence | `deepagents` changelog shows frequent `0.5.x` / `0.6.x` releases through May 2026, including `0.6.7` on 2026-05-30. |
+| Coding-agent split | `deepagents-code` has its own changelog and reached `0.1.7` on 2026-05-30. |
+| CLI split | `deepagents-cli` release series reached `0.1.2` on 2026-05-21 and deploy bundling code centers on `AGENTS.md`, `skills/`, seeded memory, and deploy artifacts. |
+| ACP split | `deepagents-acp` is separately versioned, suggesting protocol adapter work is a distinct surface. |
+
+What this history implies:
+
+1. Deep Agents is changing fast enough that hard-coding against internals is risky.
+2. Stable leverage should come from patterns and thin adapters: state graph, middleware, permissions, skills, backends, and rubrics.
+3. A direct migration away from `code-lm` would throw away existing session dispatch, model routing, bridge lifecycle, and `~/.claude` governance work.
+4. The safer path is incremental: inject Deep Agents-style prompt envelopes and state-machine contracts into `code-lm`, then wrap selected background tasks with Deep Agents if they prove valuable.
 
 Trend inference:
 
