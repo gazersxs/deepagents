@@ -245,6 +245,19 @@ Critical conclusion:
 
 Without `edgeloom`, agents mostly reason from text and grep. With `edgeloom`, agents can reason from structured program facts.
 
+### 6.5 Existing-stack provenance
+
+The discussion did not only inspect Deep Agents. It also used the current local stack shape as design evidence:
+
+| Stack part | Evidence checked | Integration implication |
+|---|---|---|
+| `~/.claude` | `skills/`, `rules/`, `agents/`, `settings.json`, `IDEAS.md`, archived project artifacts | This remains the governance brain: workflow rules, skill boundaries, reviewer protocols, backlog, and session conventions. |
+| `~/myDev/code-lm` | `src/cli/commands/session-create.ts`, `session-inspect.ts`, `prompt.ts`, `mode-set.ts`, `model-set.ts`, `permission-set.ts`, `bridge*.ts`, `hook-executor.ts`, `transcript.ts` | This remains the execution nervous system: named sessions, model/mode/permission routing, VS Code bridge lifecycle, prompt dispatch, transcript/hook integration. |
+| `~/myDev/lm_proxy` | `lm-proxy.sh`, `runs/gpt.*`, `runs/opus.*`, `tests/unit.bats`, `tests/integration.bats` | This is the model-capacity pool / lane isolation layer. The actual local path uses underscore: `~/myDev/lm_proxy`, not `~/myDev/lm-proxy`. |
+| `~/myDev/code-graph` / `edgeloom` | `src/edgeloom/cli.py`, `build.py`, `context_pack.py`, `impact.py`, `import_findings.py`, runtime/reconcile modules, `ir/cfg.py`, `ir/dfg.py`, `ir/brg.py`, `ir/taint.py`, `skills/edgeloom-query/SKILL.md`, `skills/edgeloom-enhance/SKILL.md` | This is the program world model: AST/CFG/DFG/BRG, context packs, graph-backed review, runtime-to-source reconciliation, and finding import/export. |
+
+Design consequence: Deep Agents should not replace these layers. It should provide orchestration patterns that are injected into, or wrapped around, this existing stack.
+
 ## 7. Immediate `edgeloom` Integration Finding
 
 There is a current naming/path mismatch in `~/.claude/skills`:
